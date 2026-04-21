@@ -1,0 +1,2244 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Sales Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --bg: #0a0f1e;
+        --surface: #111827;
+        --card: #151f32;
+        --border: #1e2d45;
+        --accent: #3b82f6;
+        --accent2: #06b6d4;
+        --green: #10b981;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --text: #e2e8f0;
+        --muted: #64748b;
+        --font: "Space Grotesk", sans-serif;
+        --mono: "JetBrains Mono", monospace;
+        --radius: 12px;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font);
+        min-height: 100vh;
+      }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 220px;
+        height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 16px;
+        z-index: 100;
+      }
+      .logo {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--accent);
+        margin-bottom: 32px;
+      }
+      .logo span {
+        color: var(--accent2);
+      }
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--muted);
+        transition: 0.2s;
+        margin-bottom: 4px;
+        text-decoration: none;
+      }
+      .nav-item:hover,
+      .nav-item.active {
+        background: var(--card);
+        color: var(--text);
+      }
+      .nav-item.active {
+        border-left: 3px solid var(--accent);
+        padding-left: 9px;
+      }
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+      .main {
+        margin-left: 220px;
+        padding: 28px;
+        min-height: 100vh;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+      .subtitle {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .search-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 380px;
+      }
+      .search-wrap input {
+        width: 100%;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px 16px 10px 38px;
+        border-radius: var(--radius);
+        font-family: var(--font);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .search-wrap input:focus {
+        border-color: var(--accent);
+      }
+      .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: var(--muted);
+      }
+      #search-results {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        right: 0;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        z-index: 50;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .sr-item {
+        padding: 10px 14px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        transition: 0.15s;
+      }
+      .sr-item:hover {
+        background: var(--surface);
+      }
+      .sr-item:last-child {
+        border-bottom: none;
+      }
+      .sr-cat {
+        font-size: 0.72rem;
+        color: var(--accent2);
+        margin-top: 2px;
+      }
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      .kpi-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--kpi-color, var(--accent));
+      }
+      .kpi-label {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .kpi-value {
+        font-size: 1.7rem;
+        font-weight: 700;
+        font-family: var(--mono);
+        margin: 6px 0 4px;
+        color: var(--text);
+      }
+      .kpi-sub {
+        font-size: 0.75rem;
+        color: var(--green);
+      }
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .bottom-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      .chart-wrap {
+        position: relative;
+        height: 240px;
+      }
+      .table-scroll {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.82rem;
+      }
+      th {
+        padding: 9px 12px;
+        text-align: left;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+      }
+      td {
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: rgba(59, 130, 246, 0.04);
+      }
+      .tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--accent2);
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      .dim {
+        color: var(--muted);
+      }
+      .profit {
+        color: var(--green);
+      }
+      @media (max-width: 1100px) {
+        .kpi-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+        .bottom-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 768px) {
+        .sidebar {
+          position: fixed;
+          bottom: 0;
+          top: auto;
+          width: 100%;
+          height: 60px;
+          flex-direction: row;
+          padding: 0 8px;
+          align-items: center;
+          border-right: none;
+          border-top: 1px solid var(--border);
+          justify-content: space-around;
+        }
+        .logo {
+          display: none;
+        }
+        .nav-item {
+          flex-direction: column;
+          gap: 2px;
+          font-size: 0.6rem;
+          padding: 6px 10px;
+          border-left: none !important;
+        }
+        .nav-item.active {
+          border-bottom: 2px solid var(--accent);
+          border-radius: 0;
+        }
+        .nav-icon {
+          width: 22px;
+          height: 22px;
+        }
+        .main {
+          margin-left: 0;
+          padding: 14px;
+          padding-bottom: 80px;
+        }
+        .kpi-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .kpi-value {
+          font-size: 1.25rem;
+        }
+        .charts-grid,
+        .bottom-grid {
+          grid-template-columns: 1fr;
+        }
+        .chart-wrap {
+          height: 200px;
+        }
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .search-wrap {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="sidebar">
+      <div class="logo">Sales<span>MS</span></div>
+      <a class="nav-item active" onclick="nav('dashboard')">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+        </svg>
+        Dashboard
+      </a>
+      <a class="nav-item" onclick="nav('products')">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+        </svg>
+        Products
+      </a>
+      <a class="nav-item" onclick="nav('regions')">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path
+            d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"
+          />
+        </svg>
+        Regions
+      </a>
+      <a class="nav-item" onclick="nav('reports')">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        Reports
+      </a>
+    </nav>
+
+    <main class="main">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="topbar">
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="subtitle">Sales Management System</div>
+          </div>
+          <div class="search-wrap">
+            <svg
+              class="search-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search products…"
+              oninput="doSearch(this.value)"
+            />
+            <div id="search-results"></div>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-color: var(--accent)">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value" id="k-rev"></div>
+            <div class="kpi-sub" id="k-orders"></div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: var(--green)">
+            <div class="kpi-label">Total Profit</div>
+            <div class="kpi-value" id="k-profit"></div>
+            <div class="kpi-sub">Gross profit</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: var(--accent2)">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value" id="k-tot"></div>
+            <div class="kpi-sub">All time</div>
+          </div>
+          <div class="kpi-card" style="--kpi-color: var(--amber)">
+            <div class="kpi-label">Customers</div>
+            <div class="kpi-value" id="k-cust"></div>
+            <div class="kpi-sub">Unique buyers</div>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Monthly Revenue vs Profit</div>
+            <div class="chart-wrap"><canvas id="c-monthly"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Sales by Category</div>
+            <div class="chart-wrap"><canvas id="c-cat"></canvas></div>
+          </div>
+        </div>
+        <div class="bottom-grid">
+          <div class="card">
+            <div class="card-title">Top 10 Products</div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Revenue</th>
+                    <th>Units</th>
+                  </tr>
+                </thead>
+                <tbody id="t-top"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Region Performance</div>
+            <div class="chart-wrap"><canvas id="c-region"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div class="topbar"><div class="page-title">All Products</div></div>
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">Revenue by Product</div>
+          <div class="chart-wrap" style="height: 320px">
+            <canvas id="c-allprod"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Units Sold</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody id="t-allprod"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGIONS -->
+      <div class="page" id="page-regions">
+        <div class="topbar"><div class="page-title">Region Analysis</div></div>
+        <div class="charts-grid">
+          <div class="card">
+            <div class="card-title">Revenue by Region</div>
+            <div class="chart-wrap"><canvas id="c-regbar"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Profit Share</div>
+            <div class="chart-wrap"><canvas id="c-regpie"></canvas></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top: 16px">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Region</th>
+                  <th>Orders</th>
+                  <th>Revenue</th>
+                  <th>Profit</th>
+                </tr>
+              </thead>
+              <tbody id="t-reg"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORTS -->
+      <div class="page" id="page-reports">
+        <div class="topbar"><div class="page-title">Reports</div></div>
+        <div class="card" style="margin-bottom: 16px">
+          <div class="card-title">Weekly Sales Trend</div>
+          <div class="chart-wrap" style="height: 280px">
+            <canvas id="c-weekly"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Monthly Summary</div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Orders</th>
+                  <th>Revenue</th>
+                  <th>Profit</th>
+                  <th>Avg Order</th>
+                </tr>
+              </thead>
+              <tbody id="t-monthly"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const DATA = {
+        summary: {
+          total_orders: 5000,
+          total_revenue: 37869934.8,
+          total_profit: 7573987.35,
+          unique_customers: 300,
+        },
+        monthly: [
+          {
+            month: "Jan 2022",
+            sort_key: "2022-01",
+            sales: 975866.31,
+            profit: 195173.3,
+            orders: 146,
+          },
+          {
+            month: "Feb 2022",
+            sort_key: "2022-02",
+            sales: 844934.32,
+            profit: 168986.88,
+            orders: 121,
+          },
+          {
+            month: "Mar 2022",
+            sort_key: "2022-03",
+            sales: 1143636.48,
+            profit: 228727.32,
+            orders: 151,
+          },
+          {
+            month: "Apr 2022",
+            sort_key: "2022-04",
+            sales: 1129608.52,
+            profit: 225921.74,
+            orders: 141,
+          },
+          {
+            month: "May 2022",
+            sort_key: "2022-05",
+            sales: 1276696.92,
+            profit: 255339.46,
+            orders: 154,
+          },
+          {
+            month: "Jun 2022",
+            sort_key: "2022-06",
+            sales: 1177759.7,
+            profit: 235551.98,
+            orders: 153,
+          },
+          {
+            month: "Jul 2022",
+            sort_key: "2022-07",
+            sales: 1089896.94,
+            profit: 217979.37,
+            orders: 149,
+          },
+          {
+            month: "Aug 2022",
+            sort_key: "2022-08",
+            sales: 1034266.63,
+            profit: 206853.34,
+            orders: 142,
+          },
+          {
+            month: "Sep 2022",
+            sort_key: "2022-09",
+            sales: 1064109.35,
+            profit: 212821.88,
+            orders: 136,
+          },
+          {
+            month: "Oct 2022",
+            sort_key: "2022-10",
+            sales: 1163313.09,
+            profit: 232662.62,
+            orders: 154,
+          },
+          {
+            month: "Nov 2022",
+            sort_key: "2022-11",
+            sales: 1108301.27,
+            profit: 221660.25,
+            orders: 154,
+          },
+          {
+            month: "Dec 2022",
+            sort_key: "2022-12",
+            sales: 1046965.16,
+            profit: 209393.0,
+            orders: 140,
+          },
+          {
+            month: "Jan 2023",
+            sort_key: "2023-01",
+            sales: 980508.19,
+            profit: 196101.67,
+            orders: 138,
+          },
+          {
+            month: "Feb 2023",
+            sort_key: "2023-02",
+            sales: 975787.6,
+            profit: 195157.48,
+            orders: 117,
+          },
+          {
+            month: "Mar 2023",
+            sort_key: "2023-03",
+            sales: 836548.29,
+            profit: 167309.66,
+            orders: 117,
+          },
+          {
+            month: "Apr 2023",
+            sort_key: "2023-04",
+            sales: 1134321.86,
+            profit: 226864.37,
+            orders: 138,
+          },
+          {
+            month: "May 2023",
+            sort_key: "2023-05",
+            sales: 932698.27,
+            profit: 186539.6,
+            orders: 126,
+          },
+          {
+            month: "Jun 2023",
+            sort_key: "2023-06",
+            sales: 917411.1,
+            profit: 183482.23,
+            orders: 130,
+          },
+          {
+            month: "Jul 2023",
+            sort_key: "2023-07",
+            sales: 1263144.55,
+            profit: 252628.92,
+            orders: 157,
+          },
+          {
+            month: "Aug 2023",
+            sort_key: "2023-08",
+            sales: 1028724.2,
+            profit: 205744.88,
+            orders: 133,
+          },
+          {
+            month: "Sep 2023",
+            sort_key: "2023-09",
+            sales: 1033820.15,
+            profit: 206764.07,
+            orders: 132,
+          },
+          {
+            month: "Oct 2023",
+            sort_key: "2023-10",
+            sales: 1151839.22,
+            profit: 230367.9,
+            orders: 137,
+          },
+          {
+            month: "Nov 2023",
+            sort_key: "2023-11",
+            sales: 1098348.88,
+            profit: 219669.79,
+            orders: 132,
+          },
+          {
+            month: "Dec 2023",
+            sort_key: "2023-12",
+            sales: 886863.19,
+            profit: 177372.64,
+            orders: 122,
+          },
+          {
+            month: "Jan 2024",
+            sort_key: "2024-01",
+            sales: 1147730.47,
+            profit: 229546.14,
+            orders: 147,
+          },
+          {
+            month: "Feb 2024",
+            sort_key: "2024-02",
+            sales: 1015868.0,
+            profit: 203173.62,
+            orders: 147,
+          },
+          {
+            month: "Mar 2024",
+            sort_key: "2024-03",
+            sales: 1120655.26,
+            profit: 224130.98,
+            orders: 144,
+          },
+          {
+            month: "Apr 2024",
+            sort_key: "2024-04",
+            sales: 1059559.87,
+            profit: 211911.97,
+            orders: 148,
+          },
+          {
+            month: "May 2024",
+            sort_key: "2024-05",
+            sales: 1234843.42,
+            profit: 246968.58,
+            orders: 157,
+          },
+          {
+            month: "Jun 2024",
+            sort_key: "2024-06",
+            sales: 1049082.16,
+            profit: 209816.46,
+            orders: 136,
+          },
+          {
+            month: "Jul 2024",
+            sort_key: "2024-07",
+            sales: 1024579.99,
+            profit: 204916.03,
+            orders: 136,
+          },
+          {
+            month: "Aug 2024",
+            sort_key: "2024-08",
+            sales: 918352.57,
+            profit: 183670.56,
+            orders: 128,
+          },
+          {
+            month: "Sep 2024",
+            sort_key: "2024-09",
+            sales: 1046310.72,
+            profit: 209262.2,
+            orders: 133,
+          },
+          {
+            month: "Oct 2025",
+            sort_key: "2024-10",
+            sales: 860139.31,
+            profit: 172027.91,
+            orders: 128,
+          },
+          {
+            month: "Nov 2025",
+            sort_key: "2024-11",
+            sales: 999028.6,
+            profit: 199805.73,
+            orders: 136,
+          },
+          {
+            month: "Dec 2025",
+            sort_key: "2024-12",
+            sales: 1098414.24,
+            profit: 219682.82,
+            orders: 140,
+          },
+        ],
+        top_products: [
+          {
+            Product_Name: "Zara Formal Shirt",
+            Category: "Clothing",
+            units_sold: 1559,
+            revenue: 3513960.94,
+            profit: 702792.17,
+          },
+          {
+            Product_Name: "The Alchemist (Book)",
+            Category: "Books",
+            units_sold: 1437,
+            revenue: 2994015.26,
+            profit: 598803.02,
+          },
+          {
+            Product_Name: "Levi's 501 Jeans",
+            Category: "Clothing",
+            units_sold: 1327,
+            revenue: 2792241.98,
+            profit: 558448.54,
+          },
+          {
+            Product_Name: "iPhone 15 Pro",
+            Category: "Electronics",
+            units_sold: 1320,
+            revenue: 2717340.21,
+            profit: 543468.02,
+          },
+          {
+            Product_Name: "Dyson V15 Vacuum",
+            Category: "Home & Kitchen",
+            units_sold: 1296,
+            revenue: 2591374.99,
+            profit: 518274.96,
+          },
+          {
+            Product_Name: "Adidas Ultraboost",
+            Category: "Footwear",
+            units_sold: 1443,
+            revenue: 2406537.39,
+            profit: 481307.52,
+          },
+          {
+            Product_Name: "Nike Air Max 270",
+            Category: "Footwear",
+            units_sold: 1294,
+            revenue: 2387788.96,
+            profit: 477557.76,
+          },
+          {
+            Product_Name: "Puma Running Shoes",
+            Category: "Footwear",
+            units_sold: 1157,
+            revenue: 2228095.66,
+            profit: 445619.16,
+          },
+          {
+            Product_Name: "Python Programming (Book)",
+            Category: "Books",
+            units_sold: 1413,
+            revenue: 2175566.67,
+            profit: 435113.52,
+          },
+          {
+            Product_Name: "iPad Air",
+            Category: "Electronics",
+            units_sold: 1372,
+            revenue: 2127221.37,
+            profit: 425444.29,
+          },
+        ],
+        regions: [
+          {
+            Region: "South",
+            orders: 1059,
+            revenue: 7853296.03,
+            profit: 1570659.39,
+          },
+          {
+            Region: "West",
+            orders: 1022,
+            revenue: 7628060.44,
+            profit: 1525612.17,
+          },
+          {
+            Region: "East",
+            orders: 964,
+            revenue: 7552917.44,
+            profit: 1510583.58,
+          },
+          {
+            Region: "Central",
+            orders: 964,
+            revenue: 7422376.12,
+            profit: 1484475.27,
+          },
+          {
+            Region: "North",
+            orders: 991,
+            revenue: 7413284.77,
+            profit: 1482656.94,
+          },
+        ],
+        categories: [
+          {
+            Category: "Electronics",
+            revenue: 9973166.96,
+            profit: 1994633.27,
+          },
+          {
+            Category: "Clothing",
+            revenue: 8085425.48,
+            profit: 1617085.26,
+          },
+          {
+            Category: "Books",
+            revenue: 7078435.11,
+            profit: 1415687.18,
+          },
+          {
+            Category: "Footwear",
+            revenue: 7022422.01,
+            profit: 1404484.44,
+          },
+          {
+            Category: "Home & Kitchen",
+            revenue: 4335277.37,
+            profit: 867055.39,
+          },
+          {
+            Category: "Sports & Fitness",
+            revenue: 1375207.87,
+            profit: 275041.81,
+          },
+        ],
+        weekly: [
+          {
+            week: "2022-W00",
+            sales: 86321.62,
+            orders: 12,
+          },
+          {
+            week: "2022-W01",
+            sales: 192217.25,
+            orders: 31,
+          },
+          {
+            week: "2022-W02",
+            sales: 291698.44,
+            orders: 42,
+          },
+          {
+            week: "2022-W03",
+            sales: 200019.06,
+            orders: 29,
+          },
+          {
+            week: "2022-W04",
+            sales: 191478.69,
+            orders: 28,
+          },
+          {
+            week: "2022-W05",
+            sales: 183278.37,
+            orders: 26,
+          },
+          {
+            week: "2022-W06",
+            sales: 224785.51,
+            orders: 35,
+          },
+          {
+            week: "2022-W07",
+            sales: 244675.15,
+            orders: 35,
+          },
+          {
+            week: "2022-W08",
+            sales: 177912.95,
+            orders: 26,
+          },
+          {
+            week: "2022-W09",
+            sales: 211581.87,
+            orders: 31,
+          },
+          {
+            week: "2022-W10",
+            sales: 324231.73,
+            orders: 38,
+          },
+          {
+            week: "2022-W11",
+            sales: 233489.54,
+            orders: 32,
+          },
+          {
+            week: "2022-W12",
+            sales: 246332.58,
+            orders: 33,
+          },
+          {
+            week: "2022-W13",
+            sales: 237378.12,
+            orders: 33,
+          },
+          {
+            week: "2022-W14",
+            sales: 274448.12,
+            orders: 30,
+          },
+          {
+            week: "2022-W15",
+            sales: 272722.97,
+            orders: 34,
+          },
+          {
+            week: "2022-W16",
+            sales: 285179.27,
+            orders: 37,
+          },
+          {
+            week: "2022-W17",
+            sales: 229697.38,
+            orders: 29,
+          },
+          {
+            week: "2022-W18",
+            sales: 233567.68,
+            orders: 29,
+          },
+          {
+            week: "2022-W19",
+            sales: 329804.06,
+            orders: 35,
+          },
+          {
+            week: "2022-W20",
+            sales: 275618.5,
+            orders: 37,
+          },
+          {
+            week: "2022-W21",
+            sales: 354463.42,
+            orders: 44,
+          },
+          {
+            week: "2022-W22",
+            sales: 277656.89,
+            orders: 36,
+          },
+          {
+            week: "2022-W23",
+            sales: 323213.5,
+            orders: 39,
+          },
+          {
+            week: "2022-W24",
+            sales: 253948.08,
+            orders: 36,
+          },
+          {
+            week: "2022-W25",
+            sales: 281888.09,
+            orders: 34,
+          },
+          {
+            week: "2022-W26",
+            sales: 170205.41,
+            orders: 24,
+          },
+          {
+            week: "2022-W27",
+            sales: 317659.56,
+            orders: 43,
+          },
+          {
+            week: "2022-W28",
+            sales: 248251.81,
+            orders: 35,
+          },
+          {
+            week: "2022-W29",
+            sales: 197476.22,
+            orders: 28,
+          },
+          {
+            week: "2022-W30",
+            sales: 267197.35,
+            orders: 34,
+          },
+          {
+            week: "2022-W31",
+            sales: 218198.01,
+            orders: 33,
+          },
+          {
+            week: "2022-W32",
+            sales: 207481.53,
+            orders: 24,
+          },
+          {
+            week: "2022-W33",
+            sales: 178994.3,
+            orders: 29,
+          },
+          {
+            week: "2022-W34",
+            sales: 307406.23,
+            orders: 39,
+          },
+          {
+            week: "2022-W35",
+            sales: 359981.7,
+            orders: 42,
+          },
+          {
+            week: "2022-W36",
+            sales: 197560.3,
+            orders: 30,
+          },
+          {
+            week: "2022-W37",
+            sales: 236225.11,
+            orders: 33,
+          },
+          {
+            week: "2022-W38",
+            sales: 224765.55,
+            orders: 29,
+          },
+          {
+            week: "2022-W39",
+            sales: 264926.72,
+            orders: 32,
+          },
+          {
+            week: "2022-W40",
+            sales: 292001.01,
+            orders: 37,
+          },
+          {
+            week: "2022-W41",
+            sales: 188408.64,
+            orders: 26,
+          },
+          {
+            week: "2022-W42",
+            sales: 326195.26,
+            orders: 41,
+          },
+          {
+            week: "2022-W43",
+            sales: 241131.14,
+            orders: 33,
+          },
+          {
+            week: "2022-W44",
+            sales: 205849.73,
+            orders: 27,
+          },
+          {
+            week: "2022-W45",
+            sales: 368342.07,
+            orders: 48,
+          },
+          {
+            week: "2022-W46",
+            sales: 214948.52,
+            orders: 31,
+          },
+          {
+            week: "2022-W47",
+            sales: 288233.66,
+            orders: 45,
+          },
+          {
+            week: "2022-W48",
+            sales: 167091.11,
+            orders: 24,
+          },
+          {
+            week: "2022-W49",
+            sales: 246432.84,
+            orders: 36,
+          },
+          {
+            week: "2022-W50",
+            sales: 165233.25,
+            orders: 23,
+          },
+          {
+            week: "2022-W51",
+            sales: 268308.07,
+            orders: 33,
+          },
+          {
+            week: "2022-W52",
+            sales: 249240.75,
+            orders: 31,
+          },
+          {
+            week: "2023-W00",
+            sales: 16608.68,
+            orders: 2,
+          },
+          {
+            week: "2023-W01",
+            sales: 335492.67,
+            orders: 44,
+          },
+          {
+            week: "2023-W02",
+            sales: 182737.3,
+            orders: 26,
+          },
+          {
+            week: "2023-W03",
+            sales: 241888.75,
+            orders: 33,
+          },
+          {
+            week: "2023-W04",
+            sales: 128756.47,
+            orders: 25,
+          },
+          {
+            week: "2023-W05",
+            sales: 203900.11,
+            orders: 25,
+          },
+          {
+            week: "2023-W06",
+            sales: 198513.06,
+            orders: 27,
+          },
+          {
+            week: "2023-W07",
+            sales: 226986.97,
+            orders: 29,
+          },
+          {
+            week: "2023-W08",
+            sales: 298871.91,
+            orders: 31,
+          },
+          {
+            week: "2023-W09",
+            sales: 272445.45,
+            orders: 36,
+          },
+          {
+            week: "2023-W10",
+            sales: 188348.79,
+            orders: 25,
+          },
+          {
+            week: "2023-W11",
+            sales: 224448.21,
+            orders: 25,
+          },
+          {
+            week: "2023-W12",
+            sales: 122393.72,
+            orders: 21,
+          },
+          {
+            week: "2023-W13",
+            sales: 255828.22,
+            orders: 39,
+          },
+          {
+            week: "2023-W14",
+            sales: 309404.01,
+            orders: 33,
+          },
+          {
+            week: "2023-W15",
+            sales: 203254.05,
+            orders: 26,
+          },
+          {
+            week: "2023-W16",
+            sales: 307025.73,
+            orders: 38,
+          },
+          {
+            week: "2023-W17",
+            sales: 210261.84,
+            orders: 25,
+          },
+          {
+            week: "2023-W18",
+            sales: 150228.69,
+            orders: 23,
+          },
+          {
+            week: "2023-W19",
+            sales: 198006.01,
+            orders: 31,
+          },
+          {
+            week: "2023-W20",
+            sales: 309440.7,
+            orders: 34,
+          },
+          {
+            week: "2023-W21",
+            sales: 150675.4,
+            orders: 24,
+          },
+          {
+            week: "2023-W22",
+            sales: 233618.1,
+            orders: 30,
+          },
+          {
+            week: "2023-W23",
+            sales: 258143.05,
+            orders: 32,
+          },
+          {
+            week: "2023-W24",
+            sales: 201603.67,
+            orders: 30,
+          },
+          {
+            week: "2023-W25",
+            sales: 223839.11,
+            orders: 28,
+          },
+          {
+            week: "2023-W26",
+            sales: 156304.98,
+            orders: 32,
+          },
+          {
+            week: "2023-W27",
+            sales: 313891.22,
+            orders: 46,
+          },
+          {
+            week: "2023-W28",
+            sales: 284331.93,
+            orders: 27,
+          },
+          {
+            week: "2023-W29",
+            sales: 224766.79,
+            orders: 28,
+          },
+          {
+            week: "2023-W30",
+            sales: 364179.32,
+            orders: 45,
+          },
+          {
+            week: "2023-W31",
+            sales: 230940.33,
+            orders: 30,
+          },
+          {
+            week: "2023-W32",
+            sales: 254001.48,
+            orders: 33,
+          },
+          {
+            week: "2023-W33",
+            sales: 264710.56,
+            orders: 31,
+          },
+          {
+            week: "2023-W34",
+            sales: 203251.91,
+            orders: 22,
+          },
+          {
+            week: "2023-W35",
+            sales: 214759.5,
+            orders: 31,
+          },
+          {
+            week: "2023-W36",
+            sales: 282427.67,
+            orders: 30,
+          },
+          {
+            week: "2023-W37",
+            sales: 248169.07,
+            orders: 32,
+          },
+          {
+            week: "2023-W38",
+            sales: 223280.92,
+            orders: 35,
+          },
+          {
+            week: "2023-W39",
+            sales: 238188.42,
+            orders: 30,
+          },
+          {
+            week: "2023-W40",
+            sales: 325249.49,
+            orders: 40,
+          },
+          {
+            week: "2023-W41",
+            sales: 229987.13,
+            orders: 34,
+          },
+          {
+            week: "2023-W42",
+            sales: 281154.76,
+            orders: 24,
+          },
+          {
+            week: "2023-W43",
+            sales: 174261.21,
+            orders: 22,
+          },
+          {
+            week: "2023-W44",
+            sales: 238996.24,
+            orders: 30,
+          },
+          {
+            week: "2023-W45",
+            sales: 356615.92,
+            orders: 38,
+          },
+          {
+            week: "2023-W46",
+            sales: 222715.31,
+            orders: 27,
+          },
+          {
+            week: "2023-W47",
+            sales: 257575.14,
+            orders: 32,
+          },
+          {
+            week: "2023-W48",
+            sales: 228178.24,
+            orders: 33,
+          },
+          {
+            week: "2023-W49",
+            sales: 197794.97,
+            orders: 28,
+          },
+          {
+            week: "2023-W50",
+            sales: 204977.53,
+            orders: 28,
+          },
+          {
+            week: "2023-W51",
+            sales: 136765.19,
+            orders: 24,
+          },
+          {
+            week: "2023-W52",
+            sales: 229819.6,
+            orders: 25,
+          },
+          {
+            week: "2024-W01",
+            sales: 260744.51,
+            orders: 32,
+          },
+          {
+            week: "2024-W02",
+            sales: 254154.89,
+            orders: 29,
+          },
+          {
+            week: "2024-W03",
+            sales: 228211.61,
+            orders: 32,
+          },
+          {
+            week: "2024-W04",
+            sales: 289037.56,
+            orders: 37,
+          },
+          {
+            week: "2024-W05",
+            sales: 194179.72,
+            orders: 30,
+          },
+          {
+            week: "2024-W06",
+            sales: 257472.73,
+            orders: 36,
+          },
+          {
+            week: "2024-W07",
+            sales: 185626.54,
+            orders: 28,
+          },
+          {
+            week: "2024-W08",
+            sales: 377101.98,
+            orders: 49,
+          },
+          {
+            week: "2024-W09",
+            sales: 251405.41,
+            orders: 36,
+          },
+          {
+            week: "2024-W10",
+            sales: 200448.46,
+            orders: 28,
+          },
+          {
+            week: "2024-W11",
+            sales: 176168.59,
+            orders: 25,
+          },
+          {
+            week: "2024-W12",
+            sales: 265993.92,
+            orders: 31,
+          },
+          {
+            week: "2024-W13",
+            sales: 343707.81,
+            orders: 45,
+          },
+          {
+            week: "2024-W14",
+            sales: 311752.61,
+            orders: 46,
+          },
+          {
+            week: "2024-W15",
+            sales: 300662.64,
+            orders: 38,
+          },
+          {
+            week: "2024-W16",
+            sales: 208733.03,
+            orders: 33,
+          },
+          {
+            week: "2024-W17",
+            sales: 180431.14,
+            orders: 25,
+          },
+          {
+            week: "2024-W18",
+            sales: 280224.69,
+            orders: 35,
+          },
+          {
+            week: "2024-W19",
+            sales: 281437.62,
+            orders: 35,
+          },
+          {
+            week: "2024-W20",
+            sales: 231469.67,
+            orders: 31,
+          },
+          {
+            week: "2024-W21",
+            sales: 198336.55,
+            orders: 31,
+          },
+          {
+            week: "2024-W22",
+            sales: 354983.1,
+            orders: 37,
+          },
+          {
+            week: "2024-W23",
+            sales: 180460.92,
+            orders: 29,
+          },
+          {
+            week: "2024-W24",
+            sales: 170010.13,
+            orders: 26,
+          },
+          {
+            week: "2024-W25",
+            sales: 212835.25,
+            orders: 27,
+          },
+          {
+            week: "2024-W26",
+            sales: 432148.1,
+            orders: 48,
+          },
+          {
+            week: "2024-W27",
+            sales: 265266.77,
+            orders: 29,
+          },
+          {
+            week: "2024-W28",
+            sales: 240087.07,
+            orders: 34,
+          },
+          {
+            week: "2024-W29",
+            sales: 176257.12,
+            orders: 26,
+          },
+          {
+            week: "2024-W30",
+            sales: 251415.96,
+            orders: 34,
+          },
+          {
+            week: "2024-W31",
+            sales: 227556.05,
+            orders: 30,
+          },
+          {
+            week: "2024-W32",
+            sales: 119248.94,
+            orders: 18,
+          },
+          {
+            week: "2024-W33",
+            sales: 211270.54,
+            orders: 28,
+          },
+          {
+            week: "2024-W34",
+            sales: 319769.74,
+            orders: 43,
+          },
+          {
+            week: "2024-W35",
+            sales: 160923.68,
+            orders: 26,
+          },
+          {
+            week: "2024-W36",
+            sales: 231959.29,
+            orders: 30,
+          },
+          {
+            week: "2024-W37",
+            sales: 195655.06,
+            orders: 30,
+          },
+          {
+            week: "2024-W38",
+            sales: 251128.97,
+            orders: 31,
+          },
+          {
+            week: "2024-W39",
+            sales: 298767.21,
+            orders: 34,
+          },
+          {
+            week: "2024-W40",
+            sales: 235299.19,
+            orders: 35,
+          },
+          {
+            week: "2024-W41",
+            sales: 187635.0,
+            orders: 27,
+          },
+          {
+            week: "2024-W42",
+            sales: 163868.29,
+            orders: 27,
+          },
+          {
+            week: "2024-W43",
+            sales: 184238.39,
+            orders: 26,
+          },
+          {
+            week: "2024-W44",
+            sales: 234098.46,
+            orders: 32,
+          },
+          {
+            week: "2024-W45",
+            sales: 238807.29,
+            orders: 29,
+          },
+          {
+            week: "2024-W46",
+            sales: 209625.94,
+            orders: 34,
+          },
+          {
+            week: "2024-W47",
+            sales: 271152.25,
+            orders: 35,
+          },
+          {
+            week: "2024-W48",
+            sales: 239712.25,
+            orders: 29,
+          },
+          {
+            week: "2024-W49",
+            sales: 278606.24,
+            orders: 30,
+          },
+          {
+            week: "2024-W50",
+            sales: 221457.44,
+            orders: 31,
+          },
+          {
+            week: "2024-W51",
+            sales: 198301.62,
+            orders: 29,
+          },
+          {
+            week: "2024-W52",
+            sales: 256514.73,
+            orders: 32,
+          },
+          {
+            week: "2024-W53",
+            sales: 78201.94,
+            orders: 12,
+          },
+        ],
+        all_products: [
+          {
+            Product_Name: "Zara Formal Shirt",
+            Category: "Clothing",
+            units_sold: 1559,
+            revenue: 3513960.94,
+          },
+          {
+            Product_Name: "The Alchemist (Book)",
+            Category: "Books",
+            units_sold: 1437,
+            revenue: 2994015.26,
+          },
+          {
+            Product_Name: "Levi's 501 Jeans",
+            Category: "Clothing",
+            units_sold: 1327,
+            revenue: 2792241.98,
+          },
+          {
+            Product_Name: "iPhone 15 Pro",
+            Category: "Electronics",
+            units_sold: 1320,
+            revenue: 2717340.21,
+          },
+          {
+            Product_Name: "Dyson V15 Vacuum",
+            Category: "Home & Kitchen",
+            units_sold: 1296,
+            revenue: 2591374.99,
+          },
+          {
+            Product_Name: "Adidas Ultraboost",
+            Category: "Footwear",
+            units_sold: 1443,
+            revenue: 2406537.39,
+          },
+          {
+            Product_Name: "Nike Air Max 270",
+            Category: "Footwear",
+            units_sold: 1294,
+            revenue: 2387788.96,
+          },
+          {
+            Product_Name: "Puma Running Shoes",
+            Category: "Footwear",
+            units_sold: 1157,
+            revenue: 2228095.66,
+          },
+          {
+            Product_Name: "Python Programming (Book)",
+            Category: "Books",
+            units_sold: 1413,
+            revenue: 2175566.67,
+          },
+          {
+            Product_Name: "iPad Air",
+            Category: "Electronics",
+            units_sold: 1372,
+            revenue: 2127221.37,
+          },
+          {
+            Product_Name: "Atomic Habits (Book)",
+            Category: "Books",
+            units_sold: 1381,
+            revenue: 1908853.18,
+          },
+          {
+            Product_Name: "H&M Summer Dress",
+            Category: "Clothing",
+            units_sold: 1416,
+            revenue: 1779222.56,
+          },
+          {
+            Product_Name: "HP Pavilion Laptop",
+            Category: "Electronics",
+            units_sold: 1411,
+            revenue: 1596268.22,
+          },
+          {
+            Product_Name: "Sony WH-1000XM5 Headphones",
+            Category: "Electronics",
+            units_sold: 1597,
+            revenue: 1467902.69,
+          },
+          {
+            Product_Name: "Philips Air Fryer",
+            Category: "Home & Kitchen",
+            units_sold: 1410,
+            revenue: 1424519.36,
+          },
+          {
+            Product_Name: "Samsung Galaxy S24",
+            Category: "Electronics",
+            units_sold: 1109,
+            revenue: 1240240.65,
+          },
+          {
+            Product_Name: "Dell XPS Laptop",
+            Category: "Electronics",
+            units_sold: 1251,
+            revenue: 824193.82,
+          },
+          {
+            Product_Name: "Yoga Mat Premium",
+            Category: "Sports & Fitness",
+            units_sold: 1183,
+            revenue: 739517.77,
+          },
+          {
+            Product_Name: "Creatine Monohydrate",
+            Category: "Sports & Fitness",
+            units_sold: 1420,
+            revenue: 635690.1,
+          },
+          {
+            Product_Name: "Instant Pot Duo",
+            Category: "Home & Kitchen",
+            units_sold: 1359,
+            revenue: 319383.02,
+          },
+        ],
+      };
+
+      // ── utils ──────────────────────────────────────────────
+      const INR = (v) =>
+        "₹" + Number(v).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+      const NUM = (v) => Number(v).toLocaleString("en-IN");
+      const COLORS = [
+        "#3b82f6",
+        "#06b6d4",
+        "#10b981",
+        "#f59e0b",
+        "#ef4444",
+        "#8b5cf6",
+        "#ec4899",
+        "#14b8a6",
+        "#f97316",
+        "#a78bfa",
+      ];
+
+      Chart.defaults.color = "#64748b";
+      Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+
+      const chartInstances = {};
+      function mkChart(id, config) {
+        if (chartInstances[id]) chartInstances[id].destroy();
+        chartInstances[id] = new Chart(document.getElementById(id), config);
+      }
+
+      // ── navigation ─────────────────────────────────────────
+      function nav(name) {
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        document.getElementById("page-" + name).classList.add("active");
+        document
+          .querySelectorAll(".nav-item")
+          [
+            ["dashboard", "products", "regions", "reports"].indexOf(name)
+          ].classList.add("active");
+        if (name === "products") buildProducts();
+        if (name === "regions") buildRegions();
+        if (name === "reports") buildReports();
+      }
+
+      // ── dashboard ──────────────────────────────────────────
+      function buildDashboard() {
+        const s = DATA.summary;
+        document.getElementById("k-rev").textContent = INR(s.total_revenue);
+        document.getElementById("k-profit").textContent = INR(s.total_profit);
+        document.getElementById("k-tot").textContent = NUM(s.total_orders);
+        document.getElementById("k-cust").textContent = NUM(s.unique_customers);
+        document.getElementById("k-orders").textContent =
+          NUM(s.total_orders) + " total orders";
+
+        // monthly bar
+        const mon = DATA.monthly;
+        mkChart("c-monthly", {
+          type: "bar",
+          data: {
+            labels: mon.map((r) => r.month),
+            datasets: [
+              {
+                label: "Revenue",
+                data: mon.map((r) => r.sales),
+                backgroundColor: "rgba(59,130,246,.7)",
+                borderRadius: 4,
+              },
+              {
+                label: "Profit",
+                data: mon.map((r) => r.profit),
+                backgroundColor: "rgba(16,185,129,.7)",
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "top" } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 12 } },
+              y: {
+                ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k" },
+              },
+            },
+          },
+        });
+
+        // category donut
+        const cat = DATA.categories;
+        mkChart("c-cat", {
+          type: "doughnut",
+          data: {
+            labels: cat.map((r) => r.Category),
+            datasets: [
+              {
+                data: cat.map((r) => r.revenue),
+                backgroundColor: COLORS,
+                borderWidth: 0,
+                hoverOffset: 8,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "65%",
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+
+        // top products table
+        document.getElementById("t-top").innerHTML = DATA.top_products
+          .map(
+            (r, i) => `
+    <tr><td class="dim mono">${i + 1}</td><td>${r.Product_Name}</td>
+    <td><span class="tag">${r.Category}</span></td>
+    <td class="mono">${INR(r.revenue)}</td>
+    <td class="dim">${NUM(r.units_sold)}</td></tr>`,
+          )
+          .join("");
+
+        // region bar
+        const reg = DATA.regions;
+        mkChart("c-region", {
+          type: "bar",
+          data: {
+            labels: reg.map((r) => r.Region),
+            datasets: [
+              {
+                label: "Revenue",
+                data: reg.map((r) => r.revenue),
+                backgroundColor: COLORS,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: "y",
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k" },
+              },
+            },
+          },
+        });
+      }
+
+      // ── products page ──────────────────────────────────────
+      function buildProducts() {
+        const top15 = DATA.all_products.slice(0, 15);
+        mkChart("c-allprod", {
+          type: "bar",
+          indexAxis: "y",
+          data: {
+            labels: top15.map((r) => r.Product_Name),
+            datasets: [
+              {
+                label: "Revenue",
+                data: top15.map((r) => r.revenue),
+                backgroundColor: "rgba(59,130,246,.75)",
+                borderRadius: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: {
+                ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k" },
+              },
+            },
+          },
+        });
+        document.getElementById("t-allprod").innerHTML = DATA.all_products
+          .map(
+            (r, i) => `
+    <tr><td class="dim mono">${i + 1}</td><td>${r.Product_Name}</td>
+    <td><span class="tag">${r.Category}</span></td>
+    <td class="dim">${NUM(r.units_sold)}</td>
+    <td class="mono">${INR(r.revenue)}</td></tr>`,
+          )
+          .join("");
+      }
+
+      // ── regions page ───────────────────────────────────────
+      function buildRegions() {
+        const reg = DATA.regions;
+        mkChart("c-regbar", {
+          type: "bar",
+          data: {
+            labels: reg.map((r) => r.Region),
+            datasets: [
+              {
+                label: "Revenue",
+                data: reg.map((r) => r.revenue),
+                backgroundColor: COLORS,
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k" },
+              },
+            },
+          },
+        });
+        mkChart("c-regpie", {
+          type: "doughnut",
+          data: {
+            labels: reg.map((r) => r.Region),
+            datasets: [
+              {
+                data: reg.map((r) => r.profit),
+                backgroundColor: COLORS,
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "55%",
+            plugins: { legend: { position: "bottom" } },
+          },
+        });
+        document.getElementById("t-reg").innerHTML = reg
+          .map(
+            (r) => `
+    <tr><td><strong>${r.Region}</strong></td><td class="dim">${NUM(r.orders)}</td>
+    <td class="mono">${INR(r.revenue)}</td>
+    <td class="mono profit">${INR(r.profit)}</td></tr>`,
+          )
+          .join("");
+      }
+
+      // ── reports page ───────────────────────────────────────
+      function buildReports() {
+        const wk = DATA.weekly;
+        mkChart("c-weekly", {
+          type: "line",
+          data: {
+            labels: wk.map((r) => r.week),
+            datasets: [
+              {
+                label: "Weekly Sales",
+                data: wk.map((r) => r.sales),
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59,130,246,.1)",
+                tension: 0.4,
+                fill: true,
+                pointRadius: 1,
+                pointHoverRadius: 5,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { maxTicksLimit: 24 } },
+              y: {
+                ticks: { callback: (v) => "₹" + Math.round(v / 1000) + "k" },
+              },
+            },
+          },
+        });
+        document.getElementById("t-monthly").innerHTML = DATA.monthly
+          .map(
+            (r) => `
+    <tr><td class="mono">${r.month}</td><td class="dim">${NUM(r.orders)}</td>
+    <td class="mono">${INR(r.sales)}</td>
+    <td class="mono profit">${INR(r.profit)}</td>
+    <td class="dim">${INR(Math.round(r.sales / r.orders))}</td></tr>`,
+          )
+          .join("");
+      }
+
+      // ── search ─────────────────────────────────────────────
+      let st;
+      function doSearch(q) {
+        clearTimeout(st);
+        const box = document.getElementById("search-results");
+        if (!q.trim()) {
+          box.style.display = "none";
+          return;
+        }
+        st = setTimeout(() => {
+          const res = DATA.all_products.filter((p) =>
+            p.Product_Name.toLowerCase().includes(q.toLowerCase()),
+          );
+          if (!res.length) {
+            box.style.display = "none";
+            return;
+          }
+          box.innerHTML = res
+            .slice(0, 6)
+            .map(
+              (r) => `
+      <div class="sr-item">
+        <div>${r.Product_Name}</div>
+        <div class="sr-cat">${r.Category} · ${INR(r.revenue)} · ${NUM(r.units_sold)} units</div>
+      </div>`,
+            )
+            .join("");
+          box.style.display = "block";
+        }, 200);
+      }
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-wrap"))
+          document.getElementById("search-results").style.display = "none";
+      });
+
+      // ── init ───────────────────────────────────────────────
+      buildDashboard();
+    </script>
+  </body>
+</html>
